@@ -6,7 +6,7 @@ import gspread
 import os
 
 from dotenv import load_dotenv
-from gspread import Client, Spreadsheet, worksheet, Worksheet
+from gspread import Client, Spreadsheet, worksheet, Worksheet, Cell
 from gspread.utils import rowcol_to_a1
 
 load_dotenv()
@@ -99,12 +99,38 @@ def show_ws(ws: Worksheet):
     pprint(list_of_dicts)  # для вывода большого кол-ва данных
 
 
+def find_comment_by_author(ws: Worksheet):
+    cell: Cell = ws.find('Carmen_Keeling@caroline.name')
+    print('Found smthng at row %s and col %s' % (cell.row, cell.col))
+
+    row = ws.row_values(cell.row)
+    print(row)
+
+
+# ф-и для массового обновления, напрмиер каждую 3 или 2 строку
+def do_batch_update(ws: Worksheet):
+    batches = []  # данные для обновления
+    for i in range(1, 20, 2):
+        items_count = i + 1
+        addr_from = rowcol_to_a1(i, 1)  # откуда заполняем. Начинаем с первой
+        addr_to = rowcol_to_a1(i, items_count)  # до куда заполняем
+        data_range = f'{addr_from}:{addr_to}'
+        print('add range', data_range)
+
+        # какой range хотим обновить и какие values у нас будут
+        batch = {
+            'range': data_range,
+            'values': [[i] * items_count],  # для каждого элемента в цикле for указываем все более длинный values
+        }
+        batches.append(batch)
+    ws.batch_update(batches)  # метод для массового обновления. Принимает список со словарями
+
+
 def main():
     gc: Client = gspread.service_account('./gspreadlearn-06870fa5f3a0.json')
     sh: Spreadsheet = gc.open_by_url(table_url)
     ws = sh.sheet1
     # ws2 = sh.worksheet('comments')
-
 
     # show_available_worksheets(sh)
     # show_main_worksheet(sh)
@@ -113,9 +139,12 @@ def main():
     # insert_some_data(ws)
     # update_table_by_cells(ws)
     # show_all_values_in_ws(ws)
-    create_and_fill_comments_with_ws(sh)
-    # comments = sh.worksheet('comments')
+    # create_and_fill_comments_with_ws(sh)
     # show_ws(ws2)  # вывод спсика со словарями в более удобном чем в print формате
+    # comments_ws = sh.worksheet('comments')
+
+    # find_comment_by_author(comments_ws)
+    do_batch_update(ws)
 
 
 if __name__ == '__main__':
