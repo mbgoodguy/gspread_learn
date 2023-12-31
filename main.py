@@ -126,6 +126,39 @@ def do_batch_update(ws: Worksheet):
     ws.batch_update(batches)  # метод для массового обновления. Принимает список со словарями
 
 
+def apply_cell_formatting(ws: Worksheet, a_value: str = None, b_value: str = None):
+    cell_format = {
+        "textFormat": {"bold": True},
+        "backgroundColor": {
+            "red": 1,
+            "green": 0,
+            "blue": 0
+        },
+        "textRotation": {
+            "vertical": True
+        }
+    }
+    format_range = a_value + ':' + b_value
+
+    ws.format(format_range, cell_format)
+
+
+def append_rows(ws: Worksheet):
+    ws.append_rows([
+        list(reversed(string.ascii_uppercase)),
+        list(reversed(string.ascii_lowercase)),
+        list(range(5, 1, -3))
+    ])
+
+
+def group_rows(ws: Worksheet):
+    ws.add_dimension_group_rows(0, 6)
+    print('added rows group')
+
+    ws.delete_dimension_group_rows(0, 6)
+    print('delete rows group')
+
+
 def main():
     gc: Client = gspread.service_account('./gspreadlearn-06870fa5f3a0.json')
     sh: Spreadsheet = gc.open_by_url(table_url)
@@ -144,7 +177,10 @@ def main():
     # comments_ws = sh.worksheet('comments')
 
     # find_comment_by_author(comments_ws)
-    do_batch_update(ws)
+    # do_batch_update(ws)
+    apply_cell_formatting(ws, 'A1', 'F1')
+    append_rows(ws)
+    group_rows(ws)
 
 
 if __name__ == '__main__':
